@@ -65,12 +65,12 @@ class TestFlaskPlugin(TestCase):
 
         :returns: the logged in user
         """
-        with self.client.session_audit() as s:
+        with self.client.session_transaction() as s:
             s['user_id'] = user.id
         return user
 
     def logout(self, user=None):
-        with self.client.session_audit() as s:
+        with self.client.session_transaction() as s:
             s['user_id'] = None
 
     def create_models(self):
