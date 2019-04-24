@@ -137,7 +137,7 @@ class ManyToManyRelationshipsTestCase(TestCase):
         tags = article.versions[1].tags
         assert len(tags) == 0
 
-    def test_multiple_parent_objects_added_within_same_transaction(self):
+    def test_multiple_parent_objects_added_within_same_audit(self):
         article = self.Article(name=u'Some article')
         tag = self.Tag(name=u'some tag')
         article.tags.append(tag)
@@ -153,7 +153,7 @@ class ManyToManyRelationshipsTestCase(TestCase):
         tags = article.versions[0].tags
         assert tags == [tag.versions[0]]
 
-    def test_relations_with_varying_transactions(self):
+    def test_relations_with_varying_audits(self):
         if (
             self.driver == 'mysql' and
             self.connection.dialect.server_version_info < (5, 6)
@@ -299,7 +299,7 @@ class TestManyToManySelfReferential(TestCase):
         assert article.versions[0] in reference1.versions[0].cited_by
         
         
-    def test_multiple_inserts_over_multiple_transactions(self):
+    def test_multiple_inserts_over_multiple_audits(self):
         if (
             self.driver == 'mysql' and
             self.connection.dialect.server_version_info < (5, 6)

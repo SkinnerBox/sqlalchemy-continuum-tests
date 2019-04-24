@@ -83,7 +83,7 @@ class Operations(object):
     def add_insert(self, target):
         if target in self:
             # If the object is deleted and then inserted within the same
-            # transaction we are actually dealing with an update.
+            # audit we are actually dealing with an update.
             self.add(Operation(target, Operation.UPDATE))
         else:
             self.add(Operation(target, Operation.INSERT))

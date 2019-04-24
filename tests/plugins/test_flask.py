@@ -10,7 +10,7 @@ from sqlalchemy_continuum import (
     make_versioned, remove_versioning, versioning_manager
 )
 from sqlalchemy_continuum.plugins import FlaskPlugin
-from sqlalchemy_continuum.transaction import TransactionFactory
+from sqlalchemy_continuum.audit import AuditFactory
 from tests import (
     TestCase,
     get_driver_name,
@@ -33,7 +33,7 @@ class TestFlaskPluginConfiguration(object):
 
 class TestFlaskPlugin(TestCase):
     plugins = [FlaskPlugin()]
-    transaction_cls = TransactionFactory()
+    audit_cls = AuditFactory()
     user_cls = 'User'
 
     def setup_method(self, method):
@@ -65,12 +65,12 @@ class TestFlaskPlugin(TestCase):
 
         :returns: the logged in user
         """
-        with self.client.session_transaction() as s:
+        with self.client.session_audit() as s:
             s['user_id'] = user.id
         return user
 
     def logout(self, user=None):
-        with self.client.session_transaction() as s:
+        with self.client.session_audit() as s:
             s['user_id'] = None
 
     def create_models(self):
@@ -118,7 +118,7 @@ class TestFlaskPlugin(TestCase):
         self.client.get(url_for('.test_simple_flush'))
 
         article = self.session.query(self.Article).first()
-        tx = article.versions[-1].transaction
+        tx = article.versions[-1].audit
         assert tx.user.id == user.id
 
     def test_raw_sql_and_flush(self):
@@ -128,7 +128,7 @@ class TestFlaskPlugin(TestCase):
         self.login(user)
         self.client.get(url_for('.test_raw_sql_and_flush'))
         assert (
-            self.session.query(versioning_manager.transaction_cls).count() == 2
+            self.session.query(versioning_manager.audit_cls).count() == 2
         )
 
 
@@ -222,7 +222,7 @@ class TestFlaskPluginWithFlaskSQLAlchemyExtension(object):
         self.db = SQLAlchemy()
         make_versioned()
 
-        versioning_manager.transaction_cls = TransactionFactory()
+        versioning_manager.audit_cls = AuditFactory()
         versioning_manager.options['native_versioning'] = (
             uses_native_versioning()
         )
@@ -273,13 +273,13 @@ class TestFlaskPluginWithFlaskSQLAlchemyExtension(object):
         self.db.session.commit()
         assert len(article.versions[0].tags) == 1
 
-    def test_create_transaction_with_scoped_session(self):
+    def test_create_audit_with_scoped_session(self):
         article = self.Article()
         article.name = u'Some article'
         article.content = u'Some content'
         self.db.session.add(article)
         uow = versioning_manager.unit_of_work(self.db.session)
-        transaction = uow.create_transaction(self.db.session)
-        assert transaction.id
+        audit = uow.create_audit(self.db.session)
+        assert audit.id
 
 

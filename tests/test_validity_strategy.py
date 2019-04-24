@@ -28,20 +28,20 @@ class TestValidityStrategy(TestCase):
         self.BlogPost = BlogPost
         self.Article = Article
 
-    def test_schema_contains_end_transaction_id(self):
+    def test_schema_contains_end_audit_id(self):
         table = version_class(self.Article).__table__
-        assert 'end_transaction_id' in table.c
-        table.c.end_transaction_id
-        assert table.c.end_transaction_id.nullable
-        assert not table.c.end_transaction_id.primary_key
+        assert 'end_audit_id' in table.c
+        table.c.end_audit_id
+        assert table.c.end_audit_id.nullable
+        assert not table.c.end_audit_id.primary_key
 
-    def test_end_transaction_id_none_for_newly_inserted_record(self):
+    def test_end_audit_id_none_for_newly_inserted_record(self):
         article = self.Article(name=u'Something')
         self.session.add(article)
         self.session.commit()
-        assert article.versions[-1].end_transaction_id is None
+        assert article.versions[-1].end_audit_id is None
 
-    def test_updated_end_transaction_id_of_previous_version(self):
+    def test_updated_end_audit_id_of_previous_version(self):
         article = self.Article(name=u'Something')
         self.session.add(article)
         self.session.commit()
@@ -49,8 +49,8 @@ class TestValidityStrategy(TestCase):
         article.name = u'Some other thing'
         self.session.commit()
         assert (
-            article.versions[-2].end_transaction_id ==
-            article.versions[-1].transaction_id
+            article.versions[-2].end_audit_id ==
+            article.versions[-1].audit_id
         )
 
 
@@ -100,7 +100,7 @@ class TestJoinTableInheritanceWithValidityVersioning(TestCase):
         self.ArticleVersion = version_class(self.Article)
         self.BlogPostVersion = version_class(self.BlogPost)
 
-    def test_all_tables_contain_transaction_id_column(self):
-        assert 'end_transaction_id' in self.TextItemVersion.__table__.c
-        assert 'end_transaction_id' in self.ArticleVersion.__table__.c
-        assert 'end_transaction_id' in self.BlogPostVersion.__table__.c
+    def test_all_tables_contain_audit_id_column(self):
+        assert 'end_audit_id' in self.TextItemVersion.__table__.c
+        assert 'end_audit_id' in self.ArticleVersion.__table__.c
+        assert 'end_audit_id' in self.BlogPostVersion.__table__.c

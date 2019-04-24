@@ -77,15 +77,15 @@ class TestConreteTableInheritance(TestCase):
         assert type(article.versions[0]) == self.ArticleVersion
         assert type(blogpost.versions[0]) == self.BlogPostVersion
 
-    def test_transaction_changed_entities(self):
+    def test_audit_changed_entities(self):
         article = self.Article()
         article.name = u'Text 1'
         self.session.add(article)
         self.session.commit()
-        Transaction = versioning_manager.transaction_cls
-        transaction = (
-            self.session.query(Transaction)
-            .order_by(sa.sql.expression.desc(Transaction.issued_at))
+        Audit = versioning_manager.audit_cls
+        audit = (
+            self.session.query(Audit)
+            .order_by(sa.sql.expression.desc(Audit.issued_at))
         ).first()
-        assert transaction.entity_names == [u'Article']
-        assert transaction.changed_entities
+        assert audit.entity_names == [u'Article']
+        assert audit.changed_entities

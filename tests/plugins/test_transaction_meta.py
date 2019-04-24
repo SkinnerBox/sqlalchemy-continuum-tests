@@ -1,10 +1,10 @@
 from sqlalchemy_continuum import versioning_manager
-from sqlalchemy_continuum.plugins import TransactionMetaPlugin
+from sqlalchemy_continuum.plugins import AuditMetaPlugin
 from tests import TestCase
 
 
-class TestTransaction(TestCase):
-    plugins = [TransactionMetaPlugin()]
+class TestAudit(TestCase):
+    plugins = [AuditMetaPlugin()]
 
     def setup_method(self, method):
         TestCase.setup_method(self, method)
@@ -16,7 +16,7 @@ class TestTransaction(TestCase):
         self.session.commit()
 
     def test_has_meta_attribute(self):
-        tx = self.article.versions[0].transaction
+        tx = self.article.versions[0].audit
         assert tx.meta == {}
 
         tx.meta = {u'some key': u'some value'}
@@ -24,13 +24,13 @@ class TestTransaction(TestCase):
         self.session.refresh(tx)
         assert tx.meta == {u'some key': u'some value'}
 
-    def test_assign_meta_to_transaction(self):
+    def test_assign_meta_to_audit(self):
         self.article.name = u'Some update article'
         meta = {u'some_key': u'some_value'}
         uow = versioning_manager.unit_of_work(self.session)
-        tx = uow.create_transaction(self.session)
+        tx = uow.create_audit(self.session)
         tx.meta = meta
         self.session.commit()
 
-        tx = self.article.versions[-1].transaction
+        tx = self.article.versions[-1].audit
         assert tx.meta[u'some_key'] == u'some_value'

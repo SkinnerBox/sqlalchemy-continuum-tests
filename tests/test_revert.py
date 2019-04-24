@@ -143,8 +143,8 @@ class TestRevertWithValidityVersioningStrategy(RevertTestCase):
     versioning_strategy = 'validity'
 
 
-class TestRevertWithCustomTransactionColumn(RevertTestCase):
-    transaction_column_name = 'tx_id'
+class TestRevertWithCustomAuditColumn(RevertTestCase):
+    audit_column_name = 'tx_id'
 
 
 class TestRevertWithColumnExclusion(RevertTestCase):

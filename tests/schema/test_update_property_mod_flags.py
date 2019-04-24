@@ -31,8 +31,8 @@ class TestSchemaTools(TestCase):
         self._insert(
             {
                 'id': 1,
-                'transaction_id': 1,
-                'end_transaction_id': 2,
+                'audit_id': 1,
+                'end_audit_id': 2,
                 'name': u'Article 1',
                 'name_mod': False,
                 'operation_type': 1,
@@ -41,8 +41,8 @@ class TestSchemaTools(TestCase):
         self._insert(
             {
                 'id': 1,
-                'transaction_id': 2,
-                'end_transaction_id': 4,
+                'audit_id': 2,
+                'end_audit_id': 4,
                 'name': u'Article 1',
                 'name_mod': False,
                 'operation_type': 2,
@@ -51,8 +51,8 @@ class TestSchemaTools(TestCase):
         self._insert(
             {
                 'id': 2,
-                'transaction_id': 3,
-                'end_transaction_id': 5,
+                'audit_id': 3,
+                'end_audit_id': 5,
                 'name': u'Article 2',
                 'name_mod': False,
                 'operation_type': 1,
@@ -61,8 +61,8 @@ class TestSchemaTools(TestCase):
         self._insert(
             {
                 'id': 1,
-                'transaction_id': 4,
-                'end_transaction_id': None,
+                'audit_id': 4,
+                'end_audit_id': None,
                 'name': u'Article 1 updated',
                 'name_mod': False,
                 'operation_type': 2,
@@ -71,8 +71,8 @@ class TestSchemaTools(TestCase):
         self._insert(
             {
                 'id': 2,
-                'transaction_id': 5,
-                'end_transaction_id': None,
+                'audit_id': 5,
+                'end_audit_id': None,
                 'name': u'Article 2',
                 'name_mod': False,
                 'operation_type': 2,
@@ -85,15 +85,15 @@ class TestSchemaTools(TestCase):
             conn=self.session
         )
         rows = self.session.execute(
-            'SELECT * FROM article_version ORDER BY transaction_id'
+            'SELECT * FROM article_version ORDER BY audit_id'
         ).fetchall()
-        assert rows[0].transaction_id == 1
+        assert rows[0].audit_id == 1
         assert rows[0].name_mod
-        assert rows[1].transaction_id == 2
+        assert rows[1].audit_id == 2
         assert not rows[1].name_mod
-        assert rows[2].transaction_id == 3
+        assert rows[2].audit_id == 3
         assert rows[2].name_mod
-        assert rows[3].transaction_id == 4
+        assert rows[3].audit_id == 4
         assert rows[3].name_mod
-        assert rows[4].transaction_id == 5
+        assert rows[4].audit_id == 5
         assert not rows[4].name_mod

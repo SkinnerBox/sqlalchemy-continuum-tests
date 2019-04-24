@@ -93,7 +93,7 @@ class Reverter(object):
     def revert_relationships(self):
         for prop in self.parent_mapper.iterate_properties:
             if isinstance(prop, sa.orm.RelationshipProperty):
-                if prop.key in ['versions', 'transaction']:
+                if prop.key in ['versions', 'audit']:
                     continue
 
                 if prop.key not in first_level(self.relations):

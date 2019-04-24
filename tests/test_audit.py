@@ -4,7 +4,7 @@ from tests import TestCase
 from pytest import mark
 
 
-class TestTransaction(TestCase):
+class TestAudit(TestCase):
     def setup_method(self, method):
         TestCase.setup_method(self, method)
         self.article = self.Article()
@@ -15,27 +15,27 @@ class TestTransaction(TestCase):
         self.session.commit()
 
     def test_relationships(self):
-        assert self.article.versions[0].transaction
+        assert self.article.versions[0].audit
 
-    def test_only_saves_transaction_if_actual_modifications(self):
+    def test_only_saves_audit_if_actual_modifications(self):
         self.article.name = u'Some article'
         self.session.commit()
         self.article.name = u'Some article'
         self.session.commit()
         assert self.session.query(
-            versioning_manager.transaction_cls
+            versioning_manager.audit_cls
         ).count() == 1
 
     def test_repr(self):
-        transaction = self.session.query(
-            versioning_manager.transaction_cls
+        audit = self.session.query(
+            versioning_manager.audit_cls
         ).first()
         assert (
-            '<Transaction id=%d, issued_at=%r>' % (
-                transaction.id,
-                transaction.issued_at
+            '<Audit id=%d, issued_at=%r>' % (
+                audit.id,
+                audit.issued_at
             ) ==
-            repr(transaction)
+            repr(audit)
         )
 
 
@@ -55,7 +55,7 @@ class TestAssigningUserClass(TestCase):
         self.User = User
 
     def test_copies_primary_key_type_from_user_class(self):
-        attr = versioning_manager.transaction_cls.user_id
+        attr = versioning_manager.audit_cls.user_id
         assert isinstance(attr.property.columns[0].type, sa.Unicode)
 
 
@@ -81,7 +81,7 @@ class TestAssigningUserClassInOtherSchema(TestCase):
         self.connection.execute('CREATE SCHEMA other')
         TestCase.create_tables(self)
 
-    def test_can_build_transaction_model(self):
+    def test_can_build_audit_model(self):
         # If create_models didn't crash this should be good
         pass
 

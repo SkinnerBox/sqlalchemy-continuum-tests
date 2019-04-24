@@ -45,7 +45,7 @@ class VersionModelAccessorsTestCase(TestCase):
             .order_by(
                 getattr(
                     self.ArticleVersion,
-                    self.options['transaction_column_name']
+                    self.options['audit_column_name']
                 )
             )
         ).all()
@@ -66,7 +66,7 @@ class VersionModelAccessorsTestCase(TestCase):
             .order_by(
                 getattr(
                     self.ArticleVersion,
-                    self.options['transaction_column_name']
+                    self.options['audit_column_name']
                 )
             )
         ).all()[-1]
@@ -182,7 +182,7 @@ class VersionModelAccessorsTestCase(TestCase):
             .order_by(
                 getattr(
                     self.ArticleVersion,
-                    self.options['transaction_column_name']
+                    self.options['audit_column_name']
                 )
             )
         ).all()

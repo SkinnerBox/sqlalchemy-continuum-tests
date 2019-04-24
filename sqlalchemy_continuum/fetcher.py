@@ -50,7 +50,7 @@ class VersionObjectFetcher(object):
         """
         return self.next_query(obj).first()
 
-    def _transaction_id_subquery(self, obj, next_or_prev='next', alias=None):
+    def _audit_id_subquery(self, obj, next_or_prev='next', alias=None):
         if next_or_prev == 'next':
             op = operator.gt
             func = sa.func.min
@@ -104,7 +104,7 @@ class VersionObjectFetcher(object):
                         tx_column_name(obj)
                     )
                     ==
-                    self._transaction_id_subquery(
+                    self._audit_id_subquery(
                         obj, next_or_prev=next_or_prev
                     ),
                     *parent_criteria(obj)

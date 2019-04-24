@@ -27,5 +27,5 @@ class TestBeforeFlushListener(TestCase):
         self.article.name = u'Some article'
 
         uow = versioning_manager.unit_of_work(self.session)
-        uow.create_transaction(self.session)
+        uow.create_audit(self.session)
         self.session.flush()

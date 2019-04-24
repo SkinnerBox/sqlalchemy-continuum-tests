@@ -9,19 +9,19 @@ class TestVacuum(TestCase):
             self.ArticleVersion(
                 id=1,
                 name=u'Some article',
-                transaction_id=1,
+                audit_id=1,
                 operation_type=1
             ),
             self.ArticleVersion(
                 id=1,
                 name=u'Some article',
-                transaction_id=2,
+                audit_id=2,
                 operation_type=1
             ),
             self.ArticleVersion(
                 id=1,
                 name=u'Some article',
-                transaction_id=3,
+                audit_id=3,
                 operation_type=1
             )
         ]
@@ -39,13 +39,13 @@ class TestVacuum(TestCase):
             self.ArticleVersion(
                 id=1,
                 name=u'Some article',
-                transaction_id=1,
+                audit_id=1,
                 operation_type=1
             ),
             self.ArticleVersion(
                 id=1,
                 name=u'Some other article',
-                transaction_id=2,
+                audit_id=2,
                 operation_type=1
             )
         ]

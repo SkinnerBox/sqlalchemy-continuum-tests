@@ -26,7 +26,7 @@ class TestTableBuilder(TestCase):
         assert 'name' in table.c
         assert 'content' in table.c
         assert 'description'in table.c
-        assert 'transaction_id' in table.c
+        assert 'audit_id' in table.c
         assert 'operation_type' in table.c
 
     def test_removes_autoincrementation(self):
@@ -43,10 +43,10 @@ class TestTableBuilder(TestCase):
         table = version_class(self.Article).__table__
         assert table.c.id.nullable is False
 
-    def test_transaction_id_column_not_nullable(self):
+    def test_audit_id_column_not_nullable(self):
         assert self.Article.__table__.c.name.nullable is False
         table = version_class(self.Article).__table__
-        assert table.c.transaction_id.nullable is False
+        assert table.c.audit_id.nullable is False
 
 
 class TestTableBuilderWithOnUpdate(TestCase):

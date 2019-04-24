@@ -6,9 +6,9 @@ from tests import TestCase, uses_native_versioning
 
 @pytest.mark.skipif('not uses_native_versioning()')
 class TestRawSQL(TestCase):
-    def assert_has_single_transaction(self):
+    def assert_has_single_audit(self):
         assert (
-            self.session.query(versioning_manager.transaction_cls)
+            self.session.query(versioning_manager.audit_cls)
             .count() == 1
         )
 
@@ -18,7 +18,7 @@ class TestRawSQL(TestCase):
         )
         self.session.add(self.Article(name=u'some other article'))
         self.session.commit()
-        self.assert_has_single_transaction()
+        self.assert_has_single_audit()
 
     def test_raw_insert_after_flush(self):
         self.session.add(self.Article(name=u'some other article'))
@@ -27,4 +27,4 @@ class TestRawSQL(TestCase):
             "INSERT INTO article (name) VALUES ('some article')"
         )
         self.session.commit()
-        self.assert_has_single_transaction()
+        self.assert_has_single_audit()

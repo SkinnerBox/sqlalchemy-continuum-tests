@@ -18,7 +18,7 @@ class TestUpdate(TestCase):
         version = article.versions.all()[-1]
         assert version.name == u'Updated name'
         assert version.content == u'Updated content'
-        assert version.transaction.id == version.transaction_id
+        assert version.audit.id == version.audit_id
 
     def test_partial_update(self):
         article = self.Article()
@@ -34,7 +34,7 @@ class TestUpdate(TestCase):
         version = article.versions.all()[-1]
         assert version.name == u'Some article'
         assert version.content == u'Updated content'
-        assert version.transaction.id == version.transaction_id
+        assert version.audit.id == version.audit_id
 
     def test_update_with_same_values(self):
         article = self.Article()
@@ -60,7 +60,7 @@ class TestUpdate(TestCase):
         self.session.commit()
         assert article.versions[-1].operation_type == 1
 
-    def test_multiple_updates_within_same_transaction(self):
+    def test_multiple_updates_within_same_audit(self):
         article = self.Article()
         article.name = u'Some article'
         article.content = u'Some content'

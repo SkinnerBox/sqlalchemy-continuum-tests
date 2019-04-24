@@ -49,11 +49,11 @@ def option(obj_or_class, option_name):
 
 
 def tx_column_name(obj):
-    return option(obj, 'transaction_column_name')
+    return option(obj, 'audit_column_name')
 
 
 def end_tx_column_name(obj):
-    return option(obj, 'end_transaction_column_name')
+    return option(obj, 'end_audit_column_name')
 
 
 def end_tx_attr(obj):
@@ -79,21 +79,21 @@ def parent_class(version_cls):
     return get_versioning_manager(version_cls).parent_class_map[version_cls]
 
 
-def transaction_class(cls):
+def audit_class(cls):
     """
-    Return the associated transaction class for given versioned SQLAlchemy
+    Return the associated audit class for given versioned SQLAlchemy
     declarative class or version class.
 
     ::
 
-        from sqlalchemy_continuum import transaction_class
+        from sqlalchemy_continuum import audit_class
 
 
-        transaction_class(Article)  # Transaction class
+        audit_class(Article)  # Audit class
 
     :param cls: SQLAlchemy versioned declarative class or version model class
     """
-    return get_versioning_manager(cls).transaction_cls
+    return get_versioning_manager(cls).audit_cls
 
 
 def version_obj(session, parent_obj):
@@ -251,7 +251,7 @@ def vacuum(session, model, yield_per=1000):
 
     query = (
         session.query(version_cls)
-        .order_by(option(version_cls, 'transaction_column_name'))
+        .order_by(option(version_cls, 'audit_column_name'))
     ).yield_per(yield_per)
 
     primary_key_col = sa.inspection.inspect(model).primary_key[0].name
@@ -286,8 +286,8 @@ def is_internal_column(model, column_name):
     :param column_name: Name of the column
     """
     return column_name in (
-        option(model, 'transaction_column_name'),
-        option(model, 'end_transaction_column_name'),
+        option(model, 'audit_column_name'),
+        option(model, 'end_audit_column_name'),
         option(model, 'operation_type_column_name')
     )
 
@@ -403,7 +403,7 @@ def changeset(obj):
     """
     Return a humanized changeset for given SQLAlchemy declarative object. With
     this function you can easily check the changeset of given object in current
-    transaction.
+    audit.
 
     ::
 

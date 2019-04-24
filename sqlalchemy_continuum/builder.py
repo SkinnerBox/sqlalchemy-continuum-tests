@@ -86,7 +86,7 @@ class Builder(object):
                     builder = ModelBuilder(self.manager, cls)
                     version_cls = builder(
                         table,
-                        self.manager.transaction_cls
+                        self.manager.audit_cls
                     )
 
                     self.manager.plugins.after_version_class_built(
@@ -134,11 +134,11 @@ class Builder(object):
             self.manager.parent_class_map[cls] = parent
             del cls.__version_parent__
 
-    def build_transaction_class(self):
+    def build_audit_class(self):
         if self.manager.pending_classes:
             cls = self.manager.pending_classes[0]
             self.manager.declarative_base = get_declarative_base(cls)
-            self.manager.create_transaction_model()
+            self.manager.create_audit_model()
             self.manager.plugins.after_build_tx_class(self.manager)
 
     def configure_versioned_classes(self):
@@ -158,7 +158,7 @@ class Builder(object):
 
         self.build_triggers()
         self.build_tables()
-        self.build_transaction_class()
+        self.build_audit_class()
 
         if not self.manager.options['create_models']:
             self.manager.pending_classes = []

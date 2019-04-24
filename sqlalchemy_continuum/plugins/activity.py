@@ -1,7 +1,7 @@
 """
 The ActivityPlugin is the most powerful plugin for tracking changes of
 individual entities. If you use ActivityPlugin you probably don't need to use
-TransactionChanges nor TransactionMeta plugins.
+AuditChanges nor AuditMeta plugins.
 
 You can initalize the ActivityPlugin by adding it to versioning manager.
 
@@ -22,13 +22,13 @@ with a nice twist:
     id              BigInteger  The primary key of the activity
     verb            Unicode     Verb defines the action of the activity
     data            JSON        Additional data for the activity in JSON format
-    transaction_id  BigInteger  The transaction this activity was associated
+    audit_id  BigInteger  The audit this activity was associated
                                 with
     object_id       BigInteger  The primary key of the object. Object can be
                                 any entity which has an integer as primary key.
     object_type     Unicode     The type of the object (class name as string)
 
-    object_tx_id    BigInteger  The last transaction_id associated with the
+    object_tx_id    BigInteger  The last audit_id associated with the
                                 object. This is used for efficiently fetching
                                 the object version associated with this
                                 activity.
@@ -37,14 +37,14 @@ with a nice twist:
                                 any entity which has an integer as primary key.
     target_type     Unicode     The of the target (class name as string)
 
-    target_tx_id    BigInteger  The last transaction_id associated with the
+    target_tx_id    BigInteger  The last audit_id associated with the
                                 target.
     ==============  =========== =============
 
 
 Each Activity has relationships to actor, object and target but it also holds
-information about the associated transaction and about the last associated
-transactions with the target and object. This allows each activity to also have
+information about the associated audit and about the last associated
+audits with the target and object. This allows each activity to also have
 object_version and target_version relationships for introspecting what those
 objects and targets were in given point in time. All these relationship
 properties use `generic relationships`_ of the SQLAlchemy-Utils package.
@@ -94,9 +94,9 @@ these models. ::
     session.commit()
 
 
-Current transaction gets automatically assigned to activity object::
+Current audit gets automatically assigned to activity object::
 
-    first_activity.transaction  # Transaction object
+    first_activity.audit  # Audit object
 
 
 Update activities
@@ -210,7 +210,7 @@ class ActivityBase(object):
 
     @hybrid_property
     def actor(self):
-        return self.transaction.user
+        return self.audit.user
 
 
 class ActivityFactory(ModelFactory):
@@ -227,7 +227,7 @@ class ActivityFactory(ModelFactory):
             __tablename__ = 'activity'
             manager = self
 
-            transaction_id = sa.Column(
+            audit_id = sa.Column(
                 sa.BigInteger,
                 index=True,
                 nullable=False
@@ -252,11 +252,11 @@ class ActivityFactory(ModelFactory):
                 if obj:
                     object_version = version_obj(session, obj)
                     if object_version:
-                        return object_version.transaction_id
+                        return object_version.audit_id
 
                     version_cls = version_class(obj.__class__)
                     return session.query(
-                        sa.func.max(version_cls.transaction_id)
+                        sa.func.max(version_cls.audit_id)
                     ).filter(
                         version_cls.id == obj.id
                     ).scalar()
@@ -299,16 +299,16 @@ class ActivityFactory(ModelFactory):
                 target_version_type, (target_id, target_tx_id)
             )
 
-        Activity.transaction = sa.orm.relationship(
-            manager.transaction_cls,
+        Activity.audit = sa.orm.relationship(
+            manager.audit_cls,
             backref=sa.orm.backref(
                 'activities',
             ),
             primaryjoin=(
-                '%s.id == Activity.transaction_id' %
-                manager.transaction_cls.__name__
+                '%s.id == Activity.audit_id' %
+                manager.audit_cls.__name__
             ),
-            foreign_keys=[Activity.transaction_id]
+            foreign_keys=[Activity.audit_id]
         )
         return Activity
 
@@ -330,7 +330,7 @@ class ActivityPlugin(Plugin):
     def before_flush(self, uow, session):
         for obj in session:
             if isinstance(obj, self.activity_cls):
-                obj.transaction = uow.current_transaction
+                obj.audit = uow.current_audit
                 obj.calculate_target_tx_id()
                 obj.calculate_object_tx_id()
 

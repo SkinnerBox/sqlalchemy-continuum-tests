@@ -11,7 +11,7 @@ PropertyModTrackerPlugin adds separate modified tracking column for each
 versioned column. So for example if you have versioned model called Article
 with columns `name` and `content`, this plugin would add two additional boolean
 columns `name_mod` and `content_mod` for the version model. When user commits
-transactions the plugin automatically updates these boolean columns.
+audits the plugin automatically updates these boolean columns.
 """
 
 from copy import copy

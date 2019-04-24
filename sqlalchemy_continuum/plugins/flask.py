@@ -1,9 +1,9 @@
 """
 FlaskPlugin offers way of integrating Flask framework with
-SQLAlchemy-Continuum. Flask-Plugin adds two columns for Transaction model,
+SQLAlchemy-Continuum. Flask-Plugin adds two columns for Audit model,
 namely `user_id` and `remote_addr`.
 
-These columns are automatically populated when transaction object is created.
+These columns are automatically populated when audit object is created.
 The `remote_addr` column is populated with the value of the remote address that
 made current request. The `user_id` column is populated with the id of the
 current_user object.
@@ -54,6 +54,7 @@ class FlaskPlugin(Plugin):
         current_user_id_factory=None,
         remote_addr_factory=None
     ):
+        print("FLASK PLUGIN ENABLED")
         self.current_user_id_factory = (
             fetch_current_user_id if current_user_id_factory is None
             else current_user_id_factory
@@ -69,7 +70,8 @@ class FlaskPlugin(Plugin):
                 ' running pip install Flask'
             )
 
-    def transaction_args(self, uow, session):
+    def audit_args(self, uow, session):
+        print("USER: {}".format(self.current_user_id_factory()))
         return {
             'user_id': self.current_user_id_factory(),
             'remote_addr': self.remote_addr_factory()

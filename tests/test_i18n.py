@@ -59,7 +59,7 @@ class TestVersioningWithI18nExtension(TestCase):
         article.name = u'Some article'
         self.session.commit()
 
-        tx_log = versioning_manager.transaction_cls
+        tx_log = versioning_manager.audit_cls
         tx = (
             self.session.query(tx_log)
             .order_by(sa.desc(tx_log.id))
@@ -77,7 +77,7 @@ class TestVersioningWithI18nExtension(TestCase):
 
         self.session.commit()
 
-        Transaction = versioning_manager.transaction_cls
-        transaction = self.session.query(Transaction).one()
+        Audit = versioning_manager.audit_cls
+        audit = self.session.query(Audit).one()
 
-        assert transaction.changes[1].entity_name == u'ArticleTranslation'
+        assert audit.changes[1].entity_name == u'ArticleTranslation'

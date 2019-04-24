@@ -58,7 +58,7 @@ class TestPropertyModificationsTracking(TestCase):
         version = (
             self.session
             .query(UserVersion)
-            .order_by(sa.desc(UserVersion.transaction_id))
+            .order_by(sa.desc(UserVersion.audit_id))
         ).first()
         assert version.age_mod
         assert version.name_mod

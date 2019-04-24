@@ -18,7 +18,7 @@ class TestInsert(TestCase):
         version = article.versions.all()[-1]
         assert version.name == u'Some article'
         assert version.content == u'Some content'
-        assert version.transaction.id == version.transaction_id
+        assert version.audit.id == version.audit_id
 
     def test_stores_operation_type(self):
         article = self._insert()
@@ -72,11 +72,11 @@ class TestInsertNonVersionedObject(TestCase):
 
         self.TextItem = TextItem
 
-    def test_does_not_create_transaction(self):
+    def test_does_not_create_audit(self):
         item = self.TextItem()
         self.session.add(item)
         self.session.commit()
 
         assert self.session.query(
-            versioning_manager.transaction_cls
+            versioning_manager.audit_cls
         ).count() == 0

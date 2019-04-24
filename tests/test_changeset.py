@@ -35,7 +35,7 @@ class ChangeSetBaseTestCase(TestCase):
 
 class ChangeSetTestCase(ChangeSetBaseTestCase):
     def test_changeset_for_history_that_does_not_have_first_insert(self):
-        tx_log_class = get_versioning_manager(self.Article).transaction_cls
+        tx_log_class = get_versioning_manager(self.Article).audit_cls
         tx_log = tx_log_class(issued_at=sa.func.now())
         if self.options['native_versioning']:
             tx_log.id = sa.func.txid_current()
@@ -52,7 +52,7 @@ class ChangeSetTestCase(ChangeSetBaseTestCase):
             (id, %s, name, content, operation_type)
             VALUES
             (1, %d, 'something', 'some content', 1)
-            ''' % (self.transaction_column_name, tx_log.id)
+            ''' % (self.audit_column_name, tx_log.id)
         )
 
         assert self.session.query(self.ArticleVersion).first().changeset == {
@@ -66,8 +66,8 @@ class TestChangeSetWithValidityStrategy(ChangeSetTestCase):
     versioning_strategy = 'validity'
 
 
-class TestChangeSetWithCustomTransactionColumn(ChangeSetTestCase):
-    transaction_column_name = 'tx_id'
+class TestChangeSetWithCustomAuditColumn(ChangeSetTestCase):
+    audit_column_name = 'tx_id'
 
 
 class TestChangeSetWhenParentContainsAdditionalColumns(ChangeSetTestCase):

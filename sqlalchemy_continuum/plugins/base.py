@@ -23,7 +23,7 @@ class Plugin(object):
     def after_create_version_object(self, uow, parent_obj, version_obj):
         pass
 
-    def transaction_args(self, uow, session):
+    def audit_args(self, uow, session):
         return {}
 
     def after_version_class_built(self, parent_cls, version_cls):

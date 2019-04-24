@@ -74,8 +74,8 @@ class JoinTableInheritanceTestCase(TestCase):
         assert type(article.versions[0]) == self.ArticleVersion
         assert type(blogpost.versions[0]) == self.BlogPostVersion
 
-    def test_all_tables_contain_transaction_id_column(self):
-        tx_column = self.options['transaction_column_name']
+    def test_all_tables_contain_audit_id_column(self):
+        tx_column = self.options['audit_column_name']
 
         assert tx_column in self.TextItemVersion.__table__.c
         assert tx_column in self.ArticleVersion.__table__.c
@@ -96,8 +96,8 @@ class JoinTableInheritanceTestCase(TestCase):
         self.session.delete(article)
         self.session.commit()
 
-    def test_assign_transaction_id_to_both_parent_and_child_tables(self):
-        tx_column = self.options['transaction_column_name']
+    def test_assign_audit_id_to_both_parent_and_child_tables(self):
+        tx_column = self.options['audit_column_name']
         article = self.Article()
         self.session.add(article)
         self.session.commit()
@@ -109,7 +109,7 @@ class JoinTableInheritanceTestCase(TestCase):
         ).fetchone()[0]
 
     def test_primary_keys(self):
-        tx_column = self.options['transaction_column_name']
+        tx_column = self.options['audit_column_name']
         table = self.TextItemVersion.__table__
         assert len(table.primary_key.columns)
         assert 'id' in table.primary_key.columns
@@ -120,12 +120,12 @@ class JoinTableInheritanceTestCase(TestCase):
         assert tx_column in table.primary_key.columns
 
     @pytest.mark.skipif('uses_native_versioning()')
-    def test_updates_end_transaction_id_to_all_tables(self):
+    def test_updates_end_audit_id_to_all_tables(self):
         if self.options['strategy'] == 'subquery':
             pytest.skip()
 
-        end_tx_column = self.options['end_transaction_column_name']
-        tx_column = self.options['transaction_column_name']
+        end_tx_column = self.options['end_audit_column_name']
+        tx_column = self.options['audit_column_name']
         article = self.Article()
         self.session.add(article)
         self.session.commit()

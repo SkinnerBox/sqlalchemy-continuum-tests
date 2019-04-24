@@ -20,10 +20,10 @@ class UnitOfWork(object):
     def reset(self, session=None):
         """
         Reset the internal state of this UnitOfWork object. Normally this is
-        called after transaction has been committed or rolled back.
+        called after audit has been committed or rolled back.
         """
         self.version_session = None
-        self.current_transaction = None
+        self.current_audit = None
         self.operations = Operations()
         self.pending_statements = []
         self.version_objs = {}
@@ -47,8 +47,8 @@ class UnitOfWork(object):
         Before flush processor for given session.
 
         This method creates a version session which is later on used for the
-        creation of version objects. It also creates Transaction object for the
-        current transaction and invokes before_flush template method on all
+        creation of version objects. It also creates Audit object for the
+        current audit and invokes before_flush template method on all
         plugins.
 
         If the given session had no relevant modifications regarding versioned
@@ -67,8 +67,8 @@ class UnitOfWork(object):
                 bind=session.connection()
             )
 
-        if not self.current_transaction:
-            self.create_transaction(session)
+        if not self.current_audit:
+            self.create_audit(session)
 
         self.manager.plugins.before_flush(self, session)
 
@@ -84,7 +84,7 @@ class UnitOfWork(object):
         if session == self.version_session:
             return
 
-        if not self.current_transaction:
+        if not self.current_audit:
             return
 
         if not self.version_session:
@@ -94,34 +94,34 @@ class UnitOfWork(object):
 
         self.make_versions(session)
 
-    def transaction_args(self, session):
+    def audit_args(self, session):
         args = {}
         for plugin in self.manager.plugins:
-            args.update(plugin.transaction_args(self, session))
+            args.update(plugin.audit_args(self, session))
         return args
 
-    def create_transaction(self, session):
+    def create_audit(self, session):
         """
-        Create transaction object for given SQLAlchemy session.
+        Create audit object for given SQLAlchemy session.
 
         :param session: SQLAlchemy session object
         """
-        args = self.transaction_args(session)
+        args = self.audit_args(session)
 
-        Transaction = self.manager.transaction_cls
-        self.current_transaction = Transaction()
+        Audit = self.manager.audit_cls
+        self.current_audit = Audit()
 
         for key, value in args.items():
-            setattr(self.current_transaction, key, value)
+            setattr(self.current_audit, key, value)
         if not self.version_session:
             self.version_session = sa.orm.session.Session(
                 bind=session.connection()
             )
-        self.version_session.add(self.current_transaction)
+        self.version_session.add(self.current_audit)
         self.version_session.flush()
-        self.version_session.expunge(self.current_transaction)
-        session.add(self.current_transaction)
-        return self.current_transaction
+        self.version_session.expunge(self.current_audit)
+        session.add(self.current_audit)
+        return self.current_audit
 
     def get_or_create_version_object(self, target):
         """
@@ -131,7 +131,7 @@ class UnitOfWork(object):
         :param target: Parent object to create the version object for
         """
         version_cls = version_class(target.__class__)
-        version_id = identity(target) + (self.current_transaction.id, )
+        version_id = identity(target) + (self.current_audit.id, )
         version_key = (version_cls, version_id)
 
         if version_key not in self.version_objs:
@@ -140,12 +140,12 @@ class UnitOfWork(object):
             self.version_session.add(version_obj)
             tx_column = self.manager.option(
                 target,
-                'transaction_column_name'
+                'audit_column_name'
             )
             setattr(
                 version_obj,
                 tx_column,
-                self.current_transaction.id
+                self.current_audit.id
             )
             return version_obj
         else:
@@ -195,9 +195,9 @@ class UnitOfWork(object):
             if operation.processed:
                 continue
 
-            if not self.current_transaction:
+            if not self.current_audit:
                 raise Exception(
-                    'Current transaction not available.'
+                    'Current audit not available.'
                 )
             self.process_operation(operation)
 
@@ -217,7 +217,7 @@ class UnitOfWork(object):
         fetcher = self.manager.fetcher(parent)
         session = sa.orm.object_session(version_obj)
 
-        subquery = fetcher._transaction_id_subquery(
+        subquery = fetcher._audit_id_subquery(
             version_obj,
             next_or_prev='prev',
             alias=alias
@@ -233,7 +233,7 @@ class UnitOfWork(object):
 
     def update_version_validity(self, parent, version_obj):
         """
-        Updates previous version object end_transaction_id based on given
+        Updates previous version object end_audit_id based on given
         parent object and newly created version object.
 
         This method is only used when using 'validity' versioning strategy.
@@ -273,7 +273,7 @@ class UnitOfWork(object):
                 query.update(
                     {
                         end_tx_column_name(version_obj):
-                        self.current_transaction.id
+                        self.current_audit.id
                     },
                     synchronize_session=False
                 )
@@ -288,8 +288,8 @@ class UnitOfWork(object):
         for stmt in statements:
             stmt = stmt.values(
                 **{
-                    self.manager.options['transaction_column_name']:
-                    self.current_transaction.id
+                    self.manager.options['audit_column_name']:
+                    self.current_audit.id
                 }
             )
             session.execute(stmt)
@@ -297,7 +297,7 @@ class UnitOfWork(object):
 
     def make_versions(self, session):
         """
-        Create transaction, transaction changes records, version objects.
+        Create audit, audit changes records, version objects.
 
         :param session: SQLAlchemy session object
         """

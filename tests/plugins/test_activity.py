@@ -47,7 +47,7 @@ class TestActivity(ActivityTestCase):
         self.session.commit()
         activity = self.session.query(versioning_manager.activity_cls).first()
         assert activity
-        assert activity.transaction_id
+        assert activity.audit_id
         assert activity.object == article
         assert activity.object_version == article.versions[-1]
 
@@ -64,11 +64,11 @@ class TestActivity(ActivityTestCase):
         self.session.commit()
         versions = (
             self.session.query(self.ArticleVersion)
-            .order_by(sa.desc(self.ArticleVersion.transaction_id))
+            .order_by(sa.desc(self.ArticleVersion.audit_id))
             .all()
         )
         assert activity
-        assert activity.transaction_id
+        assert activity.audit_id
         assert activity.object is None
         assert activity.object_version == versions[-1]
 
@@ -117,7 +117,7 @@ class TestObjectTxIdGeneration(ActivityTestCase):
         activity = self.create_activity(article)
         self.session.commit()
         assert activity
-        assert activity.transaction_id
+        assert activity.audit_id
         assert activity.object == article
         assert activity.object_version == article.versions[-1]
 
@@ -140,7 +140,7 @@ class TestTargetTxIdGeneration(ActivityTestCase):
         activity = self.create_activity(target=article)
         self.session.commit()
         assert activity
-        assert activity.transaction_id
+        assert activity.audit_id
         assert activity.target == article
         assert activity.target_version == article.versions[-1]
 
@@ -162,7 +162,7 @@ class TestTargetTxIdGeneration(ActivityTestCase):
             versioning_manager.activity_cls
         ).filter_by(id=activity.id).one()
         assert activity
-        assert activity.transaction_id
+        assert activity.audit_id
         assert activity.object == tag
         assert activity.object_version == tag.versions[-1]
         assert activity.target == article

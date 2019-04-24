@@ -31,8 +31,8 @@ class TestTriggerSyncing(object):
         )
         self.connection.execute(
             'CREATE TABLE article_version '
-            '(id INT, transaction_id INT, name VARCHAR(200), '
-            'name_mod BOOLEAN, PRIMARY KEY (id, transaction_id))'
+            '(id INT, audit_id INT, name VARCHAR(200), '
+            'name_mod BOOLEAN, PRIMARY KEY (id, audit_id))'
         )
 
     def teardown_method(self, method):

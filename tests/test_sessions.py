@@ -18,10 +18,10 @@ class TestSessions(TestCase):
 
         self.session.commit()
         self.session2.commit()
-        assert article.versions[-1].transaction_id
+        assert article.versions[-1].audit_id
         assert (
-            article2.versions[-1].transaction_id >
-            article.versions[-1].transaction_id
+            article2.versions[-1].audit_id >
+            article.versions[-1].audit_id
         )
 
     def test_connection_binded_to_engine(self):
@@ -29,20 +29,20 @@ class TestSessions(TestCase):
         article = self.Article(name=u'Session1 article')
         self.session2.add(article)
         self.session2.commit()
-        assert article.versions[-1].transaction_id
+        assert article.versions[-1].audit_id
 
-    def test_manual_transaction_creation(self):
+    def test_manual_audit_creation(self):
         uow = versioning_manager.unit_of_work(self.session)
-        transaction = uow.create_transaction(self.session)
+        audit = uow.create_audit(self.session)
         self.session.flush()
-        assert transaction.id
+        assert audit.id
         article = self.Article(name=u'Session1 article')
         self.session.add(article)
         self.session.flush()
-        assert uow.current_transaction.id
+        assert uow.current_audit.id
 
         self.session.commit()
-        assert article.versions[-1].transaction_id
+        assert article.versions[-1].audit_id
 
     def test_commit_without_objects(self):
         self.session.commit()
@@ -54,9 +54,9 @@ class TestUnitOfWork(TestCase):
         assert isinstance(uow, UnitOfWork)
 
 
-class TestExternalTransactionSession(TestCase):
+class TestExternalAuditSession(TestCase):
 
-    def test_session_with_external_transaction(self):
+    def test_session_with_external_audit(self):
         conn = self.engine.connect()
         t = conn.begin()
         session = Session(bind=conn)

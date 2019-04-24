@@ -2,7 +2,7 @@ from pytest import raises, skip
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_continuum import (
-    versioning_manager, ImproperlyConfigured, TransactionFactory
+    versioning_manager, ImproperlyConfigured, AuditFactory
 )
 
 from tests import TestCase
@@ -46,7 +46,7 @@ class TestWithUnknownUserClass(object):
         versioning_manager.user_cls = 'User'
         versioning_manager.declarative_base = self.Model
 
-        factory = TransactionFactory()
+        factory = AuditFactory()
         with raises(ImproperlyConfigured):
             factory(versioning_manager)
 
@@ -96,7 +96,7 @@ class TestWithCreateModelsAsFalse(TestCase):
             self.session.execute('SELECT * FROM article_version')
             .fetchone()
         )
-        assert version['transaction_id'] > 0
+        assert version['audit_id'] > 0
         assert version['id'] == article.id
         assert version['name'] == u'Some article'
 

@@ -14,7 +14,7 @@ class RelationshipBuilder(object):
         self.model = model
 
     def one_to_many_subquery(self, obj):
-        tx_column = option(obj, 'transaction_column_name')
+        tx_column = option(obj, 'audit_column_name')
 
         remote_alias = sa.orm.aliased(self.remote_cls)
         primary_keys = [
@@ -45,7 +45,7 @@ class RelationshipBuilder(object):
         )
 
     def many_to_one_subquery(self, obj):
-        tx_column = option(obj, 'transaction_column_name')
+        tx_column = option(obj, 'audit_column_name')
         reflector = VersionExpressionReflector(obj, self.property)
 
         return getattr(self.remote_cls, tx_column) == (
@@ -101,13 +101,13 @@ class RelationshipBuilder(object):
         Returns the many-to-many query.
 
         Looks up remote items through associations and for each item returns
-        returns the last version with a transaction less than or equal to the
-        transaction of `obj`. This must hold true for both the association and
+        returns the last version with a audit less than or equal to the
+        audit of `obj`. This must hold true for both the association and
         the remote relation items.
 
         Example
         -------
-        Select all tags of article with id 3 and transaction 5
+        Select all tags of article with id 3 and audit 5
 
         .. code-block:: sql
 
@@ -149,23 +149,23 @@ class RelationshipBuilder(object):
     def many_to_one_criteria(self, obj):
         """Returns the many-to-one query.
 
-        Returns the item on the 'one' side with the highest transaction id
-        as long as it is less or equal to the transaction id of the `obj`.
+        Returns the item on the 'one' side with the highest audit id
+        as long as it is less or equal to the audit id of the `obj`.
 
         Example
         -------
         Look up the Article of a Tag with article_id = 4 and
-        transaction_id = 5
+        audit_id = 5
 
         .. code-block:: sql
 
         SELECT *
         FROM articles_version
         WHERE id = 4
-        AND transaction_id = (
-            SELECT max(transaction_id)
+        AND audit_id = (
+            SELECT max(audit_id)
             FROM articles_version
-            WHERE transaction_id <= 5
+            WHERE audit_id <= 5
             AND id = 4
         )
         AND operation_type != 2
@@ -183,13 +183,13 @@ class RelationshipBuilder(object):
         Returns the one-to-many query.
 
         For each item on the 'many' side, returns its latest version as long as
-        the transaction of that version is less than equal of the transaction
+        the audit of that version is less than equal of the audit
         of `obj`.
 
         Example
         -------
         Using the Article-Tags relationship, where we look for tags of
-        article_version with id = 3 and transaction = 5 the sql produced is
+        article_version with id = 3 and audit = 5 the sql produced is
 
         .. code-block:: sql
 
@@ -200,12 +200,12 @@ class RelationshipBuilder(object):
         AND EXISTS (
             SELECT 1
             FROM tags_version as tags_version_last
-            WHERE tags_version_last.transaction_id <= 5
+            WHERE tags_version_last.audit_id <= 5
             AND tags_version_last.id = tags_version.id
             GROUP BY tags_version_last.id
             HAVING
-                MAX(tags_version_last.transaction_id) =
-                tags_version.transaction_id
+                MAX(tags_version_last.audit_id) =
+                tags_version.audit_id
         )
 
         """
@@ -259,7 +259,7 @@ class RelationshipBuilder(object):
         :param obj: SQLAlchemy declarative object
         """
 
-        tx_column = option(obj, 'transaction_column_name')
+        tx_column = option(obj, 'audit_column_name')
         reflector = VersionExpressionReflector(obj, self.property)
 
         association_table_alias = self.association_version_table.alias()

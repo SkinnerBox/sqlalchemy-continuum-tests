@@ -29,7 +29,7 @@ class ColumnReflector(object):
         column_copy.onupdate = None
         if column_copy.autoincrement:
             column_copy.autoincrement = False
-        if column_copy.name == self.option('transaction_column_name'):
+        if column_copy.name == self.option('audit_column_name'):
             column_copy.nullable = False
 
         if not column_copy.primary_key:
@@ -56,13 +56,13 @@ class ColumnReflector(object):
         )
 
     @property
-    def transaction_column(self):
+    def audit_column(self):
         """
-        Returns transaction column. By default the name of this column is
-        'transaction_id'.
+        Returns audit column. By default the name of this column is
+        'audit_id'.
         """
         return sa.Column(
-            self.option('transaction_column_name'),
+            self.option('audit_column_name'),
             sa.BigInteger,
             primary_key=True,
             index=True,
@@ -70,13 +70,13 @@ class ColumnReflector(object):
         )
 
     @property
-    def end_transaction_column(self):
+    def end_audit_column(self):
         """
-        Returns end_transaction column. By default the name of this column is
-        'end_transaction_id'.
+        Returns end_audit column. By default the name of this column is
+        'end_audit_id'.
         """
         return sa.Column(
-            self.option('end_transaction_column_name'),
+            self.option('end_audit_column_name'),
             sa.BigInteger,
             index=True
         )
@@ -99,9 +99,9 @@ class ColumnReflector(object):
         # Only yield internal version columns if parent model is not using
         # single table inheritance
         if not self.model or not sa.inspect(self.model).single:
-            yield self.transaction_column
+            yield self.audit_column
             if self.option('strategy') == 'validity':
-                yield self.end_transaction_column
+                yield self.end_audit_column
             yield self.operation_type_column
 
 

@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from .exc import ClassNotVersioned, ImproperlyConfigured
 from .manager import VersioningManager
 from .operation import Operation
-from .transaction import TransactionFactory
+from .audit import AuditFactory
 from .unit_of_work import UnitOfWork
 from .utils import (
     changeset,
@@ -11,7 +11,7 @@ from .utils import (
     is_modified,
     is_session_modified,
     parent_class,
-    transaction_class,
+    audit_class,
     tx_column_name,
     vacuum,
     version_class,
@@ -49,7 +49,7 @@ def make_versioned(
     :param options:
         A dictionary of VersioningManager options.
     :param user_cls:
-        User class which the Transaction class should have relationship to.
+        User class which the Audit class should have relationship to.
         This can either be a class or string name of a class for lazy
         evaluation.
     """

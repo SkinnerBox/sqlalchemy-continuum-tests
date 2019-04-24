@@ -127,7 +127,7 @@ class ModelBuilder(object):
                 foreign_keys=foreign_keys,
                 order_by=lambda: getattr(
                     self.version_class,
-                    option(self.model, 'transaction_column_name')
+                    option(self.model, 'audit_column_name')
                 ),
                 lazy='dynamic',
                 backref=sa.orm.backref(
@@ -136,26 +136,26 @@ class ModelBuilder(object):
                 viewonly=True
             )
 
-    def build_transaction_relationship(self, tx_class):
+    def build_audit_relationship(self, tx_class):
         """
         Builds a relationship between currently built version class and
-        Transaction class.
+        Audit class.
 
-        :param tx_class: Transaction class
+        :param tx_class: Audit class
         """
-        # Only define transaction relation if it doesn't already exist in
+        # Only define audit relation if it doesn't already exist in
         # parent class.
 
-        transaction_column = getattr(
+        audit_column = getattr(
             self.version_class,
-            option(self.model, 'transaction_column_name')
+            option(self.model, 'audit_column_name')
         )
 
-        if not hasattr(self.version_class, 'transaction'):
-            self.version_class.transaction = sa.orm.relationship(
+        if not hasattr(self.version_class, 'audit'):
+            self.version_class.audit = sa.orm.relationship(
                 tx_class,
-                primaryjoin=tx_class.id == transaction_column,
-                foreign_keys=[transaction_column],
+                primaryjoin=tx_class.id == audit_column,
+                foreign_keys=[audit_column],
             )
 
     def base_classes(self):
@@ -185,7 +185,7 @@ class ModelBuilder(object):
                         mapper.inherit_condition
                     )
                     tx_column_name = self.manager.options[
-                        'transaction_column_name'
+                        'audit_column_name'
                     ]
                     args['inherit_condition'] = sa.and_(
                         inherit_condition,
@@ -210,13 +210,13 @@ class ModelBuilder(object):
         if parent_models and not (mapper.single or mapper.concrete):
             columns = [
                 self.manager.option(self.model, 'operation_type_column_name'),
-                self.manager.option(self.model, 'transaction_column_name')
+                self.manager.option(self.model, 'audit_column_name')
             ]
             if self.manager.option(self.model, 'strategy') == 'validity':
                 columns.append(
                     self.manager.option(
                         self.model,
-                        'end_transaction_column_name'
+                        'end_audit_column_name'
                     )
                 )
 
@@ -263,7 +263,7 @@ class ModelBuilder(object):
 
     def __call__(self, table, tx_class):
         """
-        Build history model and relationships to parent model, transaction
+        Build history model and relationships to parent model, audit
         log model.
         """
         # versioned attributes need to be copied for each child class,
@@ -273,5 +273,5 @@ class ModelBuilder(object):
         self.model.__versioning_manager__ = self.manager
         self.version_class = self.build_model(table)
         self.build_parent_relationship()
-        self.build_transaction_relationship(tx_class)
+        self.build_audit_relationship(tx_class)
         return self.version_class

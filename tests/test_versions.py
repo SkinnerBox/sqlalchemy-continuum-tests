@@ -2,7 +2,7 @@ from tests import TestCase
 
 
 class TestVersions(TestCase):
-    def test_versions_ordered_by_transaction_id(self):
+    def test_versions_ordered_by_audit_id(self):
         names = [
             u'Some article',
             u'Update 1 article',

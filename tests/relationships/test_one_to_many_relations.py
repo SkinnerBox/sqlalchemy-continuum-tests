@@ -13,7 +13,7 @@ class OneToManyRelationshipsTestCase(TestCase):
         self.session.commit()
         assert article.versions[0].tags
 
-    def test_insert_in_a_separate_transaction(self):
+    def test_insert_in_a_separate_audit(self):
         article = self.Article()
         article.name = u'Some article'
         article.content = u'Some content'
@@ -57,7 +57,7 @@ class OneToManyRelationshipsTestCase(TestCase):
         assert len(article.versions[1].tags) == 1
         assert article.versions[1].tags[0].name == u'Some other tag'
 
-    def test_multiple_inserts_in_consecutive_transactions(self):
+    def test_multiple_inserts_in_consecutive_audits(self):
         article = self.Article()
         article.name = u'Some article'
         article.content = u'Some content'
@@ -203,7 +203,7 @@ class TestOneToManySelfReferential(TestCase):
             parent_article.versions[0]
         )
 
-    def test_multiple_inserts_over_multiple_transactions(self):
+    def test_multiple_inserts_over_multiple_audits(self):
         if (
             self.driver == 'mysql' and
             self.connection.dialect.server_version_info < (5, 6)

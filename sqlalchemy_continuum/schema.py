@@ -3,8 +3,8 @@ import sqlalchemy as sa
 
 def get_end_tx_column_query(
     table,
-    end_tx_column_name='end_transaction_id',
-    tx_column_name='transaction_id'
+    end_tx_column_name='end_audit_id',
+    tx_column_name='audit_id'
 ):
 
     v1 = sa.alias(table, name='v')
@@ -44,22 +44,22 @@ def get_end_tx_column_query(
 
 def update_end_tx_column(
     table,
-    end_tx_column_name='end_transaction_id',
-    tx_column_name='transaction_id',
+    end_tx_column_name='end_audit_id',
+    tx_column_name='audit_id',
     conn=None
 ):
     """
-    Calculates end transaction columns and updates the version table with the
+    Calculates end audit columns and updates the version table with the
     calculated values. This function can be used for migrating between subquery
     versioning strategy and validity versioning strategy.
 
     :param table: SQLAlchemy table object
-    :param end_tx_column_name: Name of the end transaction column
-    :param tx_column_name: Transaction column name
+    :param end_tx_column_name: Name of the end audit column
+    :param tx_column_name: Audit column name
     :param conn:
         Either SQLAlchemy Connection, Engine, Session or Alembic
         Operations object. Basically this should be an object that can execute
-        the queries needed to update the end transaction column values.
+        the queries needed to update the end audit column values.
 
         If no object is given then this function tries to use alembic.op for
         executing the queries.
@@ -95,8 +95,8 @@ def get_property_mod_flags_query(
     table,
     tracked_columns,
     mod_suffix='_mod',
-    end_tx_column_name='end_transaction_id',
-    tx_column_name='transaction_id',
+    end_tx_column_name='end_audit_id',
+    tx_column_name='audit_id',
 ):
     v1 = sa.alias(table, name='v')
     v2 = sa.alias(table, name='v2')
@@ -132,8 +132,8 @@ def update_property_mod_flags(
     table,
     tracked_columns,
     mod_suffix='_mod',
-    end_tx_column_name='end_transaction_id',
-    tx_column_name='transaction_id',
+    end_tx_column_name='end_audit_id',
+    tx_column_name='audit_id',
     conn=None
 ):
     """
@@ -143,8 +143,8 @@ def update_property_mod_flags(
 
     :param table: SQLAlchemy table object
     :param mod_suffix: Modification tracking columns suffix
-    :param end_tx_column_name: Name of the end transaction column
-    :param tx_column_name: Transaction column name
+    :param end_tx_column_name: Name of the end audit column
+    :param tx_column_name: Audit column name
     :param conn:
         Either SQLAlchemy Connection, Engine, Session or Alembic
         Operations object. Basically this should be an object that can execute

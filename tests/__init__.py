@@ -15,10 +15,10 @@ from sqlalchemy_continuum import (
     versioning_manager,
     remove_versioning
 )
-from sqlalchemy_continuum.transaction import TransactionFactory
+from sqlalchemy_continuum.audit import AuditFactory
 from sqlalchemy_continuum.plugins import (
-    TransactionMetaPlugin,
-    TransactionChangesPlugin
+    AuditMetaPlugin,
+    AuditChangesPlugin
 )
 
 warnings.simplefilter('error', sa.exc.SAWarning)
@@ -61,11 +61,11 @@ def uses_native_versioning():
 
 class TestCase(object):
     versioning_strategy = 'subquery'
-    transaction_column_name = 'transaction_id'
-    end_transaction_column_name = 'end_transaction_id'
+    audit_column_name = 'audit_id'
+    end_audit_column_name = 'end_audit_id'
     composite_pk = False
-    plugins = [TransactionChangesPlugin(), TransactionMetaPlugin()]
-    transaction_cls = TransactionFactory()
+    plugins = [AuditChangesPlugin(), AuditMetaPlugin()]
+    audit_cls = AuditFactory()
     user_cls = None
     should_create_models = True
 
@@ -76,8 +76,8 @@ class TestCase(object):
             'native_versioning': uses_native_versioning(),
             'base_classes': (self.Model, ),
             'strategy': self.versioning_strategy,
-            'transaction_column_name': self.transaction_column_name,
-            'end_transaction_column_name': self.end_transaction_column_name,
+            'audit_column_name': self.audit_column_name,
+            'end_audit_column_name': self.end_audit_column_name,
         }
 
     def setup_method(self, method):
@@ -87,7 +87,7 @@ class TestCase(object):
         driver = os.environ.get('DB', 'sqlite')
         self.driver = get_driver_name(driver)
         versioning_manager.plugins = self.plugins
-        versioning_manager.transaction_cls = self.transaction_cls
+        versioning_manager.audit_cls = self.audit_cls
         versioning_manager.user_cls = self.user_cls
 
         self.engine = create_engine(get_dns_from_driver(self.driver))
@@ -170,12 +170,12 @@ setting_variants = {
         'subquery',
         'validity',
     ],
-    'transaction_column_name': [
-        'transaction_id',
+    'audit_column_name': [
+        'audit_id',
         'tx_id'
     ],
-    'end_transaction_column_name': [
-        'end_transaction_id',
+    'end_audit_column_name': [
+        'end_audit_id',
         'end_tx_id'
     ]
 }

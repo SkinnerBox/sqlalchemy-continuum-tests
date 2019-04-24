@@ -7,7 +7,7 @@ class NullDeletePlugin(Plugin):
     def should_nullify_column(self, version_obj, prop):
         """
         Return whether or not given column of given version object should
-        be nullified (set to None) at the end of the transaction.
+        be nullified (set to None) at the end of the audit.
 
         :param version_obj:
             Version object to check the attribute nullification

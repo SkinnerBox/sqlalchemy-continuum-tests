@@ -15,47 +15,47 @@ WITH upsert as
     UPDATE {version_table_name}
     SET {update_values}
     WHERE
-        {transaction_column} = transaction_id_value
+        {audit_column} = audit_id_value
         AND
         {primary_key_criteria}
     RETURNING *
 )
 INSERT INTO {version_table_name}
-({transaction_column}, {operation_type_column}, {column_names})
+({audit_column}, {operation_type_column}, {column_names})
 SELECT
-    transaction_id_value,
+    audit_id_value,
     {operation_type},
     {insert_values}
 WHERE NOT EXISTS (SELECT 1 FROM upsert);
 """
 
-temporary_transaction_sql = """
-CREATE TEMP TABLE IF NOT EXISTS {temporary_transaction_table}
-({transaction_table_columns})
+temporary_audit_sql = """
+CREATE TEMP TABLE IF NOT EXISTS {temporary_audit_table}
+({audit_table_columns})
 ON COMMIT DELETE ROWS;
 """
 
-insert_temporary_transaction_sql = """
-INSERT INTO {temporary_transaction_table} ({transaction_table_columns})
-VALUES ({transaction_values});
+insert_temporary_audit_sql = """
+INSERT INTO {temporary_audit_table} ({audit_table_columns})
+VALUES ({audit_values});
 """
 
-temp_transaction_trigger_sql = """
-CREATE TRIGGER transaction_trigger
-AFTER INSERT ON {transaction_table}
-FOR EACH ROW EXECUTE PROCEDURE transaction_temp_table_generator()
+temp_audit_trigger_sql = """
+CREATE TRIGGER audit_trigger
+AFTER INSERT ON {audit_table}
+FOR EACH ROW EXECUTE PROCEDURE audit_temp_table_generator()
 """
 
 procedure_sql = """
 CREATE OR REPLACE FUNCTION {procedure_name}() RETURNS TRIGGER AS $$
-DECLARE transaction_id_value INT;
+DECLARE audit_id_value INT;
 BEGIN
     BEGIN
-        transaction_id_value = (SELECT id FROM temporary_transaction);
+        audit_id_value = (SELECT id FROM temporary_audit);
     EXCEPTION WHEN others THEN
         RETURN NEW;
     END;
-    IF transaction_id_value IS NULL THEN
+    IF audit_id_value IS NULL THEN
         RETURN NEW;
     END IF;
 
@@ -82,11 +82,11 @@ LANGUAGE plpgsql
 
 validity_sql = """
 UPDATE {version_table_name}
-SET {end_transaction_column} = transaction_id_value
+SET {end_audit_column} = audit_id_value
 WHERE
-    {transaction_column} = (
-        SELECT MIN({transaction_column}) FROM {version_table_name}
-        WHERE {end_transaction_column} IS NULL AND {primary_key_criteria}
+    {audit_column} = (
+        SELECT MIN({audit_column}) FROM {version_table_name}
+        WHERE {end_audit_column} IS NULL AND {primary_key_criteria}
     ) AND
     {primary_key_criteria};
 """
@@ -103,18 +103,18 @@ class SQLConstruct(object):
     def __init__(
         self,
         table,
-        transaction_column_name,
+        audit_column_name,
         operation_type_column_name,
         version_table_name_format,
         excluded_columns=None,
         update_validity_for_tables=None,
         use_property_mod_tracking=False,
-        end_transaction_column_name=None,
+        end_audit_column_name=None,
     ):
         self.update_validity_for_tables = update_validity_for_tables
         self.operation_type_column_name = operation_type_column_name
-        self.transaction_column_name = transaction_column_name
-        self.end_transaction_column_name = end_transaction_column_name
+        self.audit_column_name = audit_column_name
+        self.end_audit_column_name = end_audit_column_name
         self.version_table_name_format = version_table_name_format
         self.use_property_mod_tracking = use_property_mod_tracking
         self.table = table
@@ -132,15 +132,15 @@ class SQLConstruct(object):
             return '"' + self.table.name + '"'
 
     @property
-    def transaction_table_name(self):
+    def audit_table_name(self):
         if self.table.schema:
-            return '%s.transaction' % self.table.schema
+            return '%s.audit' % self.table.schema
         else:
-            return 'transaction'
+            return 'audit'
 
     @property
-    def temporary_transaction_table_name(self):
-        return 'temporary_transaction'
+    def temporary_audit_table_name(self):
+        return 'temporary_audit'
 
     @property
     def version_table_name(self):
@@ -168,11 +168,11 @@ class SQLConstruct(object):
             ),
             version_table_name_format=manager.option(cls, 'table_name'),
             operation_type_column_name=operation_type_column,
-            transaction_column_name=manager.option(
-                cls, 'transaction_column_name'
+            audit_column_name=manager.option(
+                cls, 'audit_column_name'
             ),
-            end_transaction_column_name=manager.option(
-                cls, 'end_transaction_column_name'
+            end_audit_column_name=manager.option(
+                cls, 'end_audit_column_name'
             ),
             use_property_mod_tracking=uses_property_mod_tracking(manager),
             excluded_columns=excluded_columns,
@@ -259,10 +259,10 @@ class UpsertSQL(SQLConstruct):
     def __str__(self):
         params = dict(
             version_table_name=self.version_table_name,
-            transaction_column=self.transaction_column_name,
+            audit_column=self.audit_column_name,
             operation_type=self.operation_type,
             operation_type_column=self.operation_type_column_name,
-            transaction_table_name=self.transaction_table_name,
+            audit_table_name=self.audit_table_name,
         )
         for key, join_operator in self.builders.items():
             params[key] = join_operator.join(getattr(self, key))
@@ -321,9 +321,9 @@ class ValiditySQL(SQLConstruct):
     def __str__(self):
         params = dict(
             version_table_name=self.version_table_name,
-            transaction_table_name=self.transaction_table_name,
-            transaction_column=self.transaction_column_name,
-            end_transaction_column=self.end_transaction_column_name,
+            audit_table_name=self.audit_table_name,
+            audit_column=self.audit_column_name,
+            end_audit_column=self.end_audit_column_name,
             primary_key_criteria=self.primary_key_criteria
         )
         return validity_sql.format(**params)
@@ -361,30 +361,30 @@ class CreateTriggerSQL(SQLConstruct):
         )
 
 
-class TransactionSQLConstruct(object):
+class AuditSQLConstruct(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
 
-class CreateTemporaryTransactionTableSQL(TransactionSQLConstruct):
-    table_name = 'temporary_transaction'
+class CreateTemporaryAuditTableSQL(AuditSQLConstruct):
+    table_name = 'temporary_audit'
 
     def __str__(self):
-        return temporary_transaction_sql.format(
-            temporary_transaction_table=self.table_name,
-            transaction_table_columns='id BIGINT, PRIMARY KEY(id)'
+        return temporary_audit_sql.format(
+            temporary_audit_table=self.table_name,
+            audit_table_columns='id BIGINT, PRIMARY KEY(id)'
         )
 
 
-class InsertTemporaryTransactionSQL(TransactionSQLConstruct):
-    table_name = 'temporary_transaction'
-    transaction_values = 'transaction_id_value'
+class InsertTemporaryAuditSQL(AuditSQLConstruct):
+    table_name = 'temporary_audit'
+    audit_values = 'audit_id_value'
 
     def __str__(self):
-        return insert_temporary_transaction_sql.format(
-            temporary_transaction_table=self.table_name,
-            transaction_table_columns='id',
-            transaction_values=self.transaction_values
+        return insert_temporary_audit_sql.format(
+            temporary_audit_table=self.table_name,
+            audit_table_columns='id',
+            audit_values=self.audit_values
         )
 
 
@@ -401,15 +401,15 @@ class CreateTriggerFunctionSQL(SQLConstruct):
             excluded_columns=', '.join(
                 "'%s'" % c for c in self.excluded_columns
             ),
-            transaction_table_name=self.transaction_table_name,
+            audit_table_name=self.audit_table_name,
             after_insert=after_insert,
             after_update=after_update,
             after_delete=after_delete,
-            temporary_transaction_sql=(
-                CreateTemporaryTransactionTableSQL()
+            temporary_audit_sql=(
+                CreateTemporaryAuditTableSQL()
             ),
-            insert_temporary_transaction_sql=(
-                InsertTemporaryTransactionSQL()
+            insert_temporary_audit_sql=(
+                InsertTemporaryAuditSQL()
             ),
             upsert_insert=InsertUpsertSQL(**args),
             upsert_update=UpdateUpsertSQL(**args),
@@ -418,20 +418,20 @@ class CreateTriggerFunctionSQL(SQLConstruct):
         return sql
 
 
-class TransactionTriggerSQL(object):
+class AuditTriggerSQL(object):
     def __init__(self, tx_class):
         self.table = tx_class.__table__
 
     @property
-    def transaction_table_name(self):
+    def audit_table_name(self):
         if self.table.schema:
-            return '%s.transaction' % self.table.schema
+            return '%s.audit' % self.table.schema
         else:
-            return 'transaction'
+            return 'audit'
 
     def __str__(self):
-        return temp_transaction_trigger_sql.format(
-            transaction_table=self.transaction_table_name
+        return temp_audit_trigger_sql.format(
+            audit_table=self.audit_table_name
         )
 
 
@@ -495,22 +495,22 @@ def sync_trigger(conn, table_name):
 def create_trigger(
     conn,
     table,
-    transaction_column_name='transaction_id',
+    audit_column_name='audit_id',
     operation_type_column_name='operation_type',
     version_table_name_format='%s_version',
     excluded_columns=None,
     use_property_mod_tracking=True,
-    end_transaction_column_name=None,
+    end_audit_column_name=None,
 ):
     params = dict(
         table=table,
         update_validity_for_tables=[],
-        transaction_column_name=transaction_column_name,
+        audit_column_name=audit_column_name,
         operation_type_column_name=operation_type_column_name,
         version_table_name_format=version_table_name_format,
         excluded_columns=excluded_columns,
         use_property_mod_tracking=use_property_mod_tracking,
-        end_transaction_column_name=end_transaction_column_name,
+        end_audit_column_name=end_audit_column_name,
     )
     conn.execute(str(CreateTriggerFunctionSQL(**params)))
     conn.execute(str(CreateTriggerSQL(**params)))
